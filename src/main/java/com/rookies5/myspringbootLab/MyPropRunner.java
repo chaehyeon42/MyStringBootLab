@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
  * ApplicationRunner를 상속받으면 프로그램 실행 시 run() 메서드가 자동으로 실행됩니다.
  */
 @Slf4j // slf4j 로그를 사용하기 위한 어노테이션
-@Component // 스프링이 이 클래스를 자동으로 찾아서 관리하도록 설정
+//@Component // 스프링이 이 클래스를 자동으로 찾아서 관리하도록 설정
 @RequiredArgsConstructor // final이 붙은 필드를 생성자로 자동 주입해줌
 public class MyPropRunner implements ApplicationRunner {
 

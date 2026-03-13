@@ -5,10 +5,12 @@ import lombok.Getter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
 
 /**
  * 1-6) ProdConfig 클래스와 DevConfig 클래스 작성하기
  */
+
 
 // 환경 정보를 저장할 데이터 클래스
 @Getter
