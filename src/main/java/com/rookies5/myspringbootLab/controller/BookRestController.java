@@ -1,8 +1,8 @@
 package com.rookies5.myspringbootLab.controller;
 
-import com.rookies5.myspringbootLab.entity.Book;
-import com.rookies5.myspringbootLab.exception.BusinessException;
-import com.rookies5.myspringbootLab.repository.BookRepository;
+import com.rookies5.myspringbootLab.dto.BookDTO.*; // BookCreateRequest, BookResponse, PatchRequest 등 포함
+import com.rookies5.myspringbootLab.service.BookService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,59 +10,80 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+
 @RestController
 @RequestMapping("/api/books")
-@RequiredArgsConstructor // Repository 주입을 위해 사용합니다.
+@RequiredArgsConstructor
 public class BookRestController {
 
-    private final BookRepository bookRepository;
+    private final BookService bookService;
 
-    //모든 도서 조회
-    @GetMapping
-    public List<Book> getAllBooks() {
-        return bookRepository.findAll();
-    }
-
-    //ID로 특정 도서 조회 (404 처리 포함)
-    @GetMapping("/{id}")
-    public ResponseEntity<Book> getBookById(@PathVariable Long id) {
-        return bookRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElseThrow(() -> new BusinessException("도서를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
-    }
-
-    //ISBN으로 도서 조회
-    @GetMapping("/isbn/{isbn}")
-    public Book getBookByIsbn(@PathVariable String isbn) {
-        return bookRepository.findByIsbn(isbn)
-                .orElseThrow(() -> new BusinessException("해당 ISBN의 도서가 없습니다.", HttpStatus.NOT_FOUND));
-    }
-
-    //새 도서 등록
+    /*
+     * POST /api/books : 새 도서 등록
+     */
     @PostMapping
-    public ResponseEntity<Book> createBook(@RequestBody Book book) {
-        Book savedBook = bookRepository.save(book);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedBook);
+    public ResponseEntity<BookResponse> createBook(@Valid @RequestBody BookCreateRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(bookService.createBook(request));
     }
 
-    // 도서 정보 수정
+    /*
+     * GET /api/books : 모든 도서 조회
+     */
+    @GetMapping
+    public ResponseEntity<List<BookResponse>> getAllBooks() {
+        return ResponseEntity.ok(bookService.getAllBooks());
+    }
+
+    /*
+     * GET /api/books/{id} : ID로 특정 도서 조회
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<BookResponse> getBookById(@PathVariable Long id) {
+        return ResponseEntity.ok(bookService.getBookById(id));
+    }
+
+    /*
+     * GET /api/books/isbn/{isbn} : ISBN으로 도서 조회
+     */
+    @GetMapping("/isbn/{isbn}")
+    public ResponseEntity<BookResponse> getBookByIsbn(@PathVariable String isbn) {
+        return ResponseEntity.ok(bookService.getBookByIsbn(isbn));
+    }
+
+    /*
+     * GET /api/books/search/author?author={author} : 저자로 도서 검색
+     */
+    @GetMapping("/search/author")
+    public ResponseEntity<List<BookResponse>> getBooksByAuthor(@RequestParam String author) {
+        // Service에 해당 메서드가 없다면 추가가 필요할 수 있습니다.
+        return ResponseEntity.ok(bookService.getBooksByAuthor(author));
+    }
+
     @PutMapping("/{id}")
-    public ResponseEntity<Book> updateBook(@PathVariable Long id, @RequestBody Book bookDetails) {
-        Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("수정할 도서가 없습니다.", HttpStatus.NOT_FOUND));
-        
-        // 데이터 업데이트 (엔티티에 Setter가 있거나 메소드가 있어야 함)
-        // 예: book.updateDetails(bookDetails);
-        
-        return ResponseEntity.ok(bookRepository.save(book));
+    public ResponseEntity<BookResponse> updateBook(
+            @PathVariable Long id,
+            @Valid @RequestBody BookUpdateRequest request) {
+        // 서비스에서 BookUpdateRequest를 처리하는 메서드를 호출합니다.
+        return ResponseEntity.ok(bookService.updateBook(id, request));
     }
 
-    // 도서 삭제
+    /*
+     * PATCH /api/books/{id} : 도서 정보 부분 수정
+     */
+    @PatchMapping("/{id}")
+    public ResponseEntity<BookResponse> patchUpdateBook(
+            @PathVariable Long id,
+            @RequestBody PatchRequest request) {
+        // 서비스의 updateBook 메서드가 PatchRequest를 받도록 설계되었습니다.
+        return ResponseEntity.ok(bookService.updateBook(id, request));
+    }
+
+    /*
+     * DELETE /api/books/{id} : 도서 삭제
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
-        Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("삭제할 도서가 없습니다.", HttpStatus.NOT_FOUND));
-        bookRepository.delete(book);
+        bookService.deleteBook(id);
         return ResponseEntity.noContent().build();
     }
 }
